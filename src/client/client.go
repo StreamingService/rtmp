@@ -15,7 +15,8 @@ type Client struct {
 	clientConn net.Conn
 	index int32
 	createTime time.Time
-	version int8 // 协议版本
+	Version uint8 // 协议版本
+	MaxChunkSize uint32
 }
 
 func New(clientConn net.Conn, index int32) Client {
@@ -24,6 +25,7 @@ func New(clientConn net.Conn, index int32) Client {
 		clientConn: clientConn,
 		index: index,
 		createTime: time.Now(),
+		MaxChunkSize: 128, // 默认值为128 bytes
 	}
 }
 

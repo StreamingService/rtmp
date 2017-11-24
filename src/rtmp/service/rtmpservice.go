@@ -5,6 +5,7 @@ import (
 
 	"client"
 	"rtmp/msg"
+	"rtmp/handler"
 )
 
 const (
@@ -34,6 +35,7 @@ func New(c client.Client) RtmpService {
 func (s *RtmpService) DoService() {
 	log.Print("执行rtmp服务")
 
+	// 握手
 	err := s.handshake()
 	if (err != nil) {
 		log.Print(err)
@@ -42,7 +44,28 @@ func (s *RtmpService) DoService() {
 
 	s.status = HandshakeDone // 状态置为已握手
 	
-	
+	// 服务循环
+	for {
+		msg, err := msg.ParseClientMsg(&s.client)
+		if (err != nil) {
+			log.Print(err)
+			break
+		}
+
+		if (msg != nil) {
+			log.Printf("接收到客户端消息: %+v", msg)
+			// 处理消息
+			h := handler.GetMsgHandler(msg) // 查询处理器
+			if (h != nil) {
+				// 处理器存在, 执行处理逻辑
+				h.Handle(s.client, msg)
+			}
+		}
+
+	}
+
+	// 服务结束
+	s.client.Close()
 }
 
 /**

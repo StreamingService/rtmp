@@ -55,7 +55,7 @@ func (s *RtmpService) handshake() error {
 	if (err != nil) {
 		return err
 	}
-	log.Printf("c2: %s", c2)
+	log.Printf("c2: %+v", c2)
 
 	// S2
 	s2 := msg.S2 {
