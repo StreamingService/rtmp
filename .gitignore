@@ -1,0 +1,6 @@
+/.vscode
+/bin
+/pkg
+/src/sourcegraph.com
+/src/debug
+/src/github.com
