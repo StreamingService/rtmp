@@ -6,6 +6,7 @@ import (
 
 	"client"
 	"rtmp/service"
+	"rtmp/handler"
 )
 
 type Server struct {
@@ -39,6 +40,9 @@ func New(bind string) (Server, error) {
 启动服务
 */
 func (s *Server) Serv() (error) {
+	// 注册消息处理器
+	handler.RegistHandlers();
+
 	log.Printf("accept")
 
 	var clientIndex int32 = 0

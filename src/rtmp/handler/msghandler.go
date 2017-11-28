@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"log"
+	"reflect"
+
 	"client"
 	"rtmp/msg"
-	"reflect"
 )
 
 /*
@@ -21,8 +23,14 @@ var handlerMap map[string]MsgHandler = make(map[string]MsgHandler)
 获取消息的处理器
 */
 func GetMsgHandler(m msg.ClientMsg) MsgHandler {
-	reflect.TypeOf(m).Name()
-	// TODO 
-	
-	return nil
+	msgName := reflect.TypeOf(m).String() // 获取消息实例名称
+	return handlerMap[msgName]
+}
+
+/*
+注册消息处理器
+*/
+func RegistHandlers() {
+	log.Print("注册消息处理器: *msg.SetChunkSize=&SetChunkSizeHandler{}")
+	handlerMap["*msg.SetChunkSize"] = &SetChunkSizeHandler{}
 }
