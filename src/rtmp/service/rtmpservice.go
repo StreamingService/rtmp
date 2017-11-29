@@ -53,7 +53,7 @@ func (s *RtmpService) DoService() {
 		}
 
 		if (msg != nil) {
-			log.Printf("接收到客户端消息: %+v", msg)
+			log.Printf("接收到客户端消息: %#v", msg)
 			// 处理消息
 			h := handler.GetMsgHandler(msg) // 查询处理器
 			if (h != nil) {
