@@ -58,7 +58,12 @@ func (s *RtmpService) DoService() {
 			h := handler.GetMsgHandler(msg) // 查询处理器
 			if (h != nil) {
 				// 处理器存在, 执行处理逻辑
-				h.Handle(s.client, msg)
+				err = h.Handle(s.client, msg)
+				if (err != nil) {
+					// 处理消息出错
+					log.Printf("处理消息出错: %s", err.Error())
+					break; // 跳出服务循环
+				}
 			}
 		}
 
