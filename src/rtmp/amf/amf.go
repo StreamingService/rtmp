@@ -40,7 +40,7 @@ func Serialize(data interface{}) []byte {
 /*
 反序列化
 
-如果error不为空, 表示读完数据
+从流中反序列化一个amf数据
 */
 func Deserialize(r io.Reader) (interface{}, error) {
 	b1 := []byte {0}
@@ -67,6 +67,7 @@ func Deserialize(r io.Reader) (interface{}, error) {
 }
 
 func serializeNumber(number float64) []byte {
+	
 	return nil
 }
 
@@ -76,7 +77,7 @@ func deserializeNumber(r io.Reader) (float64, error) {
 	if (err != nil) {
 		return 0, err
 	}
-	return 0, nil
+	return codec.DeFloat64(b), nil
 }
 
 func deserializeBoolen(r io.Reader) (bool, error) {
@@ -85,7 +86,7 @@ func deserializeBoolen(r io.Reader) (bool, error) {
 	if (err != nil) {
 		return false, err
 	}
-	return b[0] == 0, nil
+	return b[0] != 0, nil
 }
 
 func serializeString(value string) []byte {

@@ -18,3 +18,13 @@ func EnInt32(value uint32) []byte {
 func DeInt16(b []byte) uint16 {
 	return uint16(b[0]) << 8 | uint16(b[1])
 }
+
+/*
+解码64位浮点数
+
+1位符号位，11位阶码，52位尾数 ??
+*/
+func DeFloat64(b []byte) float64 {
+	//TODO
+	return 0
+}
