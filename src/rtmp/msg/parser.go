@@ -36,8 +36,10 @@ func ParseClientMsg(reader io.Reader) (ClientMsg, error) {
 			Header: header,
 		}
 
-	case 0x14: // AMF0 Command
-
+	case 0x14 , 0x11: // AMF0 or AMF3 Command
+		msg = &Command {
+			Header: header,
+		}
 	}
 
 	if (msg == nil) {
