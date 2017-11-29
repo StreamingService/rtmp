@@ -31,6 +31,11 @@ func GetMsgHandler(m msg.ClientMsg) MsgHandler {
 注册消息处理器
 */
 func RegistHandlers() {
-	log.Print("注册消息处理器: *msg.SetChunkSize=&SetChunkSizeHandler{}")
-	handlerMap["*msg.SetChunkSize"] = &SetChunkSizeHandler{}
+	registHandler("*msg.SetChunkSize", &SetChunkSizeHandler{})
+	registHandler("*msg.Command", &CommandHandler{})
+}
+
+func registHandler(msgType string, handler MsgHandler) {
+	log.Printf("注册消息处理器: %s = %s", msgType, reflect.TypeOf(handler).String())
+	handlerMap[msgType] = handler
 }
