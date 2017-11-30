@@ -1,6 +1,7 @@
 package msg
 
 import (
+	"bytes"
 	"errors"
 	"io"
 
@@ -65,5 +66,24 @@ func (msg *Command) Read(reader io.Reader) error {
 	ext, _ := amf.Deserialize(reader)
 	msg.UserExt = ext
 
+	return nil
+}
+
+func (msg *Command) Encode() []byte {
+
+	body := msg.encodeBody()
+
+	// 重置header数据
+	msg.Header.BodySize = uint32(len(body))
+	msg.Header.TypeId = 0x14
+
+	buf := bytes.NewBuffer([]byte{})
+	msg.Header.Write(buf)
+	buf.Write(body)
+
+	return buf.Bytes()
+}
+
+func (msg *Command) encodeBody() []byte {
 	return nil
 }

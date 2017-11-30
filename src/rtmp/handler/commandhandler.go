@@ -44,6 +44,7 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 
 	onBWDone := msg.Command {
 		Header: msg.Header {
+			Format: 1,
 			ChunkStreamId: cmd.Header.ChunkStreamId,
 		},
 		Name: "onBWDone",

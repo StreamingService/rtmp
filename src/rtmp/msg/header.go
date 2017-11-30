@@ -164,3 +164,10 @@ func readByte(reader io.Reader) (byte, error) {
 	_, err := reader.Read(b)
 	return b[0], err
 }
+
+/*
+将header数据序列化到输出流
+*/
+func (h *Header) Write(writer io.Writer) error {
+	return nil
+}
