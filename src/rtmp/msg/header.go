@@ -8,7 +8,13 @@ import (
 chunk header
 */
 type Header struct {
-	Format uint8 // 2bit, 0、1、3
+	/*
+	0, 包括所以字段信息, 流的第一个消息format必需为0;
+	1, 不包括message stream id, 继承之前消息的;
+	2, 不包括message stream id、body size, 继承之前消息的; 用于固定长度的message开始
+	3, 不包括message header; 类型0与3组合用于body size > max window zise时, 消息拆分
+	*/
+	Format uint8 // 2bit, 0、1、2、3
 	ChunkStreamId uint32 // 6bit or 14bit or 22bit
 	Timestamp uint32 // 4byte
 	BodySize uint32 // 3byte
