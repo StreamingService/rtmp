@@ -1,7 +1,10 @@
 package msg
 
 import (
+	"errors"
 	"io"
+	
+	"rtmp/codec"
 )
 
 /*
@@ -152,7 +155,7 @@ func read3byteInt(reader io.Reader) (uint32, error) {
 		return 0, err
 	}
 
-	return uint32(b[0]) << 16 | uint32(b[1]) << 8 | uint32(b[2]), nil
+	return codec.DeInt24(b), nil
 }
 
 func read4byteInt(reader io.Reader) (uint32, error) {
@@ -162,7 +165,7 @@ func read4byteInt(reader io.Reader) (uint32, error) {
 		return 0, err
 	}
 
-	return uint32(b[0]) << 24 | uint32(b[1]) << 16 | uint32(b[2]) << 8 | uint32(b[3]), nil
+	return codec.DeInt32(b), nil
 }
 
 func readByte(reader io.Reader) (byte, error) {
@@ -175,5 +178,77 @@ func readByte(reader io.Reader) (byte, error) {
 将header数据序列化到输出流
 */
 func (h *Header) Write(writer io.Writer) error {
+	err := h.writeBaseHeader(writer)
+	if (err != nil) {
+		return err
+	}
+
+	err = h.writeMsgHeader(writer)
+	if (err != nil) {
+		return err
+	}
+
+	return nil
+}
+
+/*
+写 formatid 和 chunk stream id
+*/
+func (h *Header) writeBaseHeader(writer io.Writer) error {
+	var err error
+	if (h.ChunkStreamId < 64) {
+		// base header为1 byte
+		_, err = writer.Write([]byte{ h.Format << 6 | uint8(h.ChunkStreamId) })
+	} else if (h.ChunkStreamId < 320) {
+		// base header为2 byte
+		_, err = writer.Write([]byte{ h.Format << 6, uint8(h.ChunkStreamId - 64) })
+	} else if (h.ChunkStreamId < 65600) {
+		// base header为3 byte
+		temp := h.ChunkStreamId - 64
+		_, err = writer.Write([]byte{ h.Format << 6 | 1,  uint8(temp >> 8), uint8(temp)})
+	} else {
+		err = errors.New("ChunkStreamId超过支持最大值65599")
+	}
+	return err
+}
+
+/* 
+写chunk message header
+*/
+func (h *Header) writeMsgHeader(writer io.Writer) error {
+	switch h.Format {
+	case 0:
+		return h.writeType0MsgHeader(writer)
+	case 1:
+		return h.writeType1MsgHeader(writer)
+	case 2:
+		return h.writeType2MsgHeader(writer)
+	case 3:
+		return h.writeType3MsgHeader(writer)
+	}
+	return errors.New("不支持的Format id")
+}
+
+func (h *Header) writeType0MsgHeader(writer io.Writer) error {
+	writer.Write(codec.EnInt24(h.Timestamp))
+	writer.Write(codec.EnInt24(h.BodySize))
+	writer.Write([]byte{ h.TypeId })
+	writer.Write(codec.EnInt24(h.StreamId))
+	return nil
+}
+
+func (h *Header) writeType1MsgHeader(writer io.Writer) error {
+	writer.Write(codec.EnInt24(h.Timestamp))
+	writer.Write(codec.EnInt24(h.BodySize))
+	writer.Write([]byte{ h.TypeId })
+	return nil
+}
+
+func (h *Header) writeType2MsgHeader(writer io.Writer) error {
+	writer.Write(codec.EnInt24(h.Timestamp))
+	return nil
+}
+
+func (h *Header) writeType3MsgHeader(writer io.Writer) error {
 	return nil
 }

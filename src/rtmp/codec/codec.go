@@ -28,3 +28,15 @@ func DeFloat64(b []byte) float64 {
 	//TODO
 	return 0
 }
+
+func EnInt24(value uint32) []byte {
+	b := make([]byte, 3)
+	b[0] = byte(value >> 16)
+	b[1] = byte(value >> 8 & 0xFF)
+	b[2] = byte(value & 0xFF)
+	return b
+}
+
+func DeInt24(b []byte) uint32 {
+	return uint32(b[0]) << 16 | uint32(b[1]) << 8 | uint32(b[2])
+}
