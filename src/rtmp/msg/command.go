@@ -85,5 +85,12 @@ func (msg *Command) Encode() []byte {
 }
 
 func (msg *Command) encodeBody() []byte {
-	return nil
+	buf := bytes.NewBuffer([]byte{})
+	buf.Write(amf.SerializeString(msg.Name)) // name
+	buf.Write(amf.SerializeNumber(float64(msg.TransactionId))) // TransactionId
+	buf.Write(amf.SerializeObject(msg.Object)) // Object
+	if (msg.UserExt != nil) {
+		buf.Write(amf.Serialize(msg.UserExt))
+	}
+	return buf.Bytes()
 }
