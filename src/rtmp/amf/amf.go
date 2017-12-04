@@ -1,6 +1,8 @@
 package amf
 
 import (
+	"reflect"
+	"log"
 	"bytes"
 	"strconv"
 	"errors"
@@ -34,7 +36,32 @@ Sent by Flash player 9+
 
 */
 func Serialize(data interface{}) []byte {
-	return nil
+	if (data == nil) {
+		return SerializeNull()
+	}
+
+	str, isStr := data.(string)
+	if (isStr) {
+		return SerializeString(str)
+	}
+
+	num, isNum := data.(float64)
+	if (isNum) {
+		return SerializeNumber(num)
+	}
+
+	boolean, isBoolean := data.(bool)
+	if (isBoolean) {
+		return SerializeBoolen(boolean)
+	}
+
+	obj, isObj := data.(map[string]interface{})
+	if (isObj) {
+		return SerializeObject(obj)
+	}
+
+	log.Printf("!!不支持的amf数据类型: %s, 编码为null", reflect.TypeOf(data).String())
+	return SerializeNull()
 }
 
 /*
@@ -66,9 +93,10 @@ func Deserialize(r io.Reader) (interface{}, error) {
 	return nil, errors.New("不支持的amf类型: " + strconv.FormatUint(uint64(b1[0]), 16))
 }
 
-func serializeNumber(number float64) []byte {
-	
-	return nil
+func SerializeNumber(number float64) []byte {
+	// TODO
+	b := make([]byte, 8)
+	return b
 }
 
 func deserializeNumber(r io.Reader) (float64, error) {
@@ -89,8 +117,22 @@ func deserializeBoolen(r io.Reader) (bool, error) {
 	return b[0] != 0, nil
 }
 
-func serializeString(value string) []byte {
-	return nil
+func SerializeBoolen(value bool) []byte {
+	var boolByte byte
+	if ( value ) {
+		boolByte = 1
+	} else {
+		boolByte = 0
+	}
+	return []byte{ 0x01, boolByte }
+}
+
+func SerializeString(value string) []byte {
+	buf := bytes.NewBuffer([]byte{ 0x02 })
+	strBytes := []byte(value)
+	buf.Write(codec.EnInt16(uint16(len(strBytes))))
+	buf.Write(strBytes)
+	return buf.Bytes()
 }
 
 func deserializeString(r io.Reader) (string, error) {
@@ -154,4 +196,31 @@ func isObjEnd(b3 []byte) bool {
 	}
 
 	return b3[0] == 0x00 && b3[1] == 0x00 && b3[2] == 0x09
+}
+
+/*
+amf序列化obj
+*/
+func SerializeObject(obj map[string]interface{}) []byte {
+	if (obj == nil) {
+		return SerializeNull()
+	}
+
+	buf := bytes.NewBuffer([]byte{ 0x03 }) // 对象类型头
+	for k, v := range obj {
+		// 序列化属性名
+		strBytes := []byte(k)
+		buf.Write(codec.EnInt16(uint16(len(strBytes))))
+		buf.Write(strBytes)
+
+		// 序列化值
+		buf.Write(Serialize(v))
+	}
+	buf.Write([]byte{ 0x00, 0x00, 0x09 }) // 对象结束
+
+	return buf.Bytes()
+}
+
+func SerializeNull() []byte {
+	return []byte{ 0x05 }
 }

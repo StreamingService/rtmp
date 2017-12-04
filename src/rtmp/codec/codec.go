@@ -15,6 +15,13 @@ func EnInt32(value uint32) []byte {
 	return b
 }
 
+func EnInt16(value uint16) []byte {
+	b := make([]byte, 2)
+	b[0] = byte(value >> 8 & 0xFF)
+	b[1] = byte(value & 0xFF)
+	return b
+}
+
 func DeInt16(b []byte) uint16 {
 	return uint16(b[0]) << 8 | uint16(b[1])
 }
