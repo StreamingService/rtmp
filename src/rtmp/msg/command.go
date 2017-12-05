@@ -21,7 +21,7 @@ type Command struct {
 	Name string // command name
 	TransactionId uint32
 	Object map[string]interface{} // 命令数据对象
-	UserExt interface{} // 用户扩展数据, 可选
+	UserArguments interface{} // 用户参数, 可选
 }
 
 func (msg *Command) Read(reader io.Reader) error {
@@ -64,7 +64,7 @@ func (msg *Command) Read(reader io.Reader) error {
 
 	// UserExt 可选
 	ext, _ := amf.Deserialize(reader)
-	msg.UserExt = ext
+	msg.UserArguments = ext
 
 	return nil
 }
@@ -89,8 +89,8 @@ func (msg *Command) encodeBody() []byte {
 	buf.Write(amf.SerializeString(msg.Name)) // name
 	buf.Write(amf.SerializeNumber(float64(msg.TransactionId))) // TransactionId
 	buf.Write(amf.SerializeObject(msg.Object)) // Object
-	if (msg.UserExt != nil) {
-		buf.Write(amf.Serialize(msg.UserExt))
+	if (msg.UserArguments != nil) {
+		buf.Write(amf.Serialize(msg.UserArguments))
 	}
 	return buf.Bytes()
 }
