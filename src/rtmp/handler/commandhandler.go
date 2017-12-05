@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"log"
+	"strconv"
 
 	"client"
 	"rtmp/msg"
@@ -22,10 +23,19 @@ func (h *CommandHandler) Handle(c client.Client, m msg.ClientMsg) error {
 		return errors.New("消息类型不正确")
 	}
 
-	if (cmd.Name == "connect") {
+	switch cmd.Name {
+	case "connect":
 		return handleConnect(c, cmd)
-	} else if (cmd.Name == "_checkbw") {
+	case "_checkbw":
 		return handle_checkbw(c, cmd)
+	case "releaseStream":
+		return handleReleaseStream(c, cmd)
+	case "FCPublish":
+		return handleFCPublish(c, cmd)
+	case "createStream":
+		return handleCreateStream(c, cmd)
+	case "publish":
+		return handlePublish(c, cmd)
 	}
 
 	return nil
@@ -44,7 +54,7 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 	log.Printf("客户端连接应用: %s", app)
 
 	// 给客户端发送_result命令消息
-	respCmd := msg.Command {
+	resultCmd := msg.Command {
 		Header: msg.Header {
 			Format: 1,
 			ChunkStreamId: cmd.Header.ChunkStreamId,
@@ -52,9 +62,7 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 		Name: "_result",
 		TransactionId: cmd.TransactionId,
 	}
-
-	_, err := c.Write(respCmd.Encode())
-
+	_, err := c.Write(resultCmd.Encode())
 	return err
 }
 
@@ -75,5 +83,86 @@ func handle_checkbw(c client.Client, cmd *msg.Command) error {
 
 	_, err := c.Write(_result.Encode())
 
+	return err
+}
+
+func handleReleaseStream(c client.Client, cmd *msg.Command) error {
+	log.Print("开始处理releaseStream命令")
+
+	// 给客户端发送_result命令消息
+	respCmd := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "_result",
+		TransactionId: cmd.TransactionId,
+	}
+
+	_, err := c.Write(respCmd.Encode())
+
+	return err
+}
+
+
+func handleFCPublish(c client.Client, cmd *msg.Command) error {
+	// 触发onFCPublish事件
+	onFCPublish := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "onFCPublish",
+		TransactionId: cmd.TransactionId,
+		Object: nil,
+		UserArguments: map[string]interface{} {
+			"code": "NetStream.Publish.Start",
+			"description": "description2",
+			"details": "details2",
+			"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+		},
+	}
+	_, err := c.Write(onFCPublish.Encode())
+	return err
+}
+
+func handleCreateStream(c client.Client, cmd *msg.Command) error {
+	log.Print("处理createStream命令")
+	_result := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "_result",
+		TransactionId: cmd.TransactionId,
+		UserArguments: float64(10), // stream id
+	}
+
+	_, err := c.Write(_result.Encode())
+
+	return err
+}
+
+func handlePublish(c client.Client, cmd *msg.Command) error {
+	log.Print("处理publish命令")
+	// 触发onStatus事件
+	onStatus := msg.Command {
+		Header: msg.Header {
+			Format: 0,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+			StreamId: cmd.Header.StreamId,
+		},
+		Name: "onStatus",
+		TransactionId: 0,
+		Object: nil,
+		UserArguments: map[string]interface{} {
+			"level": "status",
+			"code": "NetStream.Publish.Start",
+			"description": "123 is now published.",
+			"details": "123",
+			"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+		},
+	}
+	_, err := c.Write(onStatus.Encode())
 	return err
 }
