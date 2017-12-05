@@ -94,9 +94,9 @@ func Deserialize(r io.Reader) (interface{}, error) {
 }
 
 func SerializeNumber(number float64) []byte {
-	// TODO
-	b := make([]byte, 8)
-	return b
+	buf := bytes.NewBuffer([]byte{ 0x00 }) // 类型
+	buf.Write(codec.EnFloat64(number))
+	return buf.Bytes()
 }
 
 func deserializeNumber(r io.Reader) (float64, error) {

@@ -2,6 +2,11 @@
 
 package codec
 
+import (
+	"math"
+	"encoding/binary"
+)
+
 func DeInt32(b []byte) uint32 {
 	return uint32(b[0]) << 24 | uint32(b[1]) << 16 | uint32(b[2]) << 8 | uint32(b[3])
 }
@@ -32,8 +37,15 @@ func DeInt16(b []byte) uint16 {
 1位符号位，11位阶码，52位尾数 ??
 */
 func DeFloat64(b []byte) float64 {
-	//TODO
-	return 0
+	i := binary.BigEndian.Uint64(b)
+	return math.Float64frombits(i)
+}
+
+func EnFloat64(value float64) []byte {
+	bits := math.Float64bits(value)
+    bytes := make([]byte, 8)
+    binary.BigEndian.PutUint64(bytes, bits)
+    return bytes
 }
 
 func EnInt24(value uint32) []byte {
