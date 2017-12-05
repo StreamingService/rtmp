@@ -40,3 +40,7 @@ func (c *Client) Write(b []byte) (n int, err error) {
 func (c *Client) Close() error {
 	return c.clientConn.Close()
 }
+
+func (c *Client) GetIndex() int32 {
+	return c.index
+}
