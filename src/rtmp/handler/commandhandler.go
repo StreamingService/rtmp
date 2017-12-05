@@ -43,18 +43,17 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 
 	log.Printf("客户端连接应用: %s", app)
 
-	// 给客户端发送onBWDone命令消息
-
-	onBWDone := msg.Command {
+	// 给客户端发送_result命令消息
+	respCmd := msg.Command {
 		Header: msg.Header {
 			Format: 1,
 			ChunkStreamId: cmd.Header.ChunkStreamId,
 		},
-		Name: "onBWDone",
+		Name: "_result",
 		TransactionId: cmd.TransactionId,
 	}
 
-	_, err := c.Write(onBWDone.Encode())
+	_, err := c.Write(respCmd.Encode())
 
 	return err
 }
