@@ -24,6 +24,8 @@ func (h *CommandHandler) Handle(c client.Client, m msg.ClientMsg) error {
 
 	if (cmd.Name == "connect") {
 		return handleConnect(c, cmd)
+	} else if (cmd.Name == "_checkbw") {
+		return handle_checkbw(c, cmd)
 	}
 
 	return nil
@@ -33,6 +35,7 @@ func (h *CommandHandler) Handle(c client.Client, m msg.ClientMsg) error {
 处理连接命令
 */
 func handleConnect(c client.Client, cmd *msg.Command) error {
+	log.Print("开始处理connect命令")
 	app , isStr := cmd.Object["app"].(string)
 	if (!isStr) {
 		return errors.New("无app字段")
@@ -48,10 +51,30 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 			ChunkStreamId: cmd.Header.ChunkStreamId,
 		},
 		Name: "onBWDone",
-		TransactionId: 0,
+		TransactionId: cmd.TransactionId,
 	}
 
 	_, err := c.Write(onBWDone.Encode())
+
+	return err
+}
+
+/*
+处理 _checkbw
+*/
+func handle_checkbw(c client.Client, cmd *msg.Command) error {
+	log.Print("开始处理_checkbw命令")
+
+	_result := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "_result",
+		TransactionId: cmd.TransactionId,
+	}
+
+	_, err := c.Write(_result.Encode())
 
 	return err
 }
