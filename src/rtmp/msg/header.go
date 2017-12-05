@@ -3,6 +3,7 @@ package msg
 import (
 	"errors"
 	"io"
+	"encoding/binary"
 	
 	"rtmp/codec"
 )
@@ -100,7 +101,7 @@ func (h *Header) readType0MsgHeader(reader io.Reader) error {
 	}
 	h.TypeId = typeId
 
-	streamId, err := read4byteInt(reader)
+	streamId, err := readMsgStreamId(reader)
 	if (err != nil) {
 		return err
 	}
@@ -168,6 +169,19 @@ func read4byteInt(reader io.Reader) (uint32, error) {
 	return codec.DeInt32(b), nil
 }
 
+/*
+message stream id, 4byte little-endian
+*/
+func readMsgStreamId(reader io.Reader) (uint32, error) {
+	b := make([]byte, 4)
+	_, err := reader.Read(b)
+	if (err != nil) {
+		return 0, err
+	}
+
+	return binary.LittleEndian.Uint32(b), nil
+}
+
 func readByte(reader io.Reader) (byte, error) {
 	b := []byte{ 0 }
 	_, err := reader.Read(b)
@@ -233,7 +247,11 @@ func (h *Header) writeType0MsgHeader(writer io.Writer) error {
 	writer.Write(codec.EnInt24(h.Timestamp))
 	writer.Write(codec.EnInt24(h.BodySize))
 	writer.Write([]byte{ h.TypeId })
-	writer.Write(codec.EnInt24(h.StreamId))
+
+	// stream id 为 little-endian 4byte
+	streamIdBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(streamIdBytes, h.StreamId)
+	writer.Write(streamIdBytes)
 	return nil
 }
 
