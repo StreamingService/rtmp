@@ -115,11 +115,13 @@ func handleFCPublish(c client.Client, cmd *msg.Command) error {
 		Name: "onFCPublish",
 		TransactionId: cmd.TransactionId,
 		Object: nil,
-		UserArguments: map[string]interface{} {
-			"code": "NetStream.Publish.Start",
-			"description": "description2",
-			"details": "details2",
-			"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+		UserArguments: []interface{} {
+			map[string]interface{} {
+				"code": "NetStream.Publish.Start",
+				"description": "description2",
+				"details": "details2",
+				"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+			},
 		},
 	}
 	_, err := c.Write(onFCPublish.Encode())
@@ -135,7 +137,9 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 		},
 		Name: "_result",
 		TransactionId: cmd.TransactionId,
-		UserArguments: float64(10), // stream id
+		UserArguments: []interface{} {
+			float64(10), // stream id
+		},
 	}
 
 	_, err := c.Write(_result.Encode())
@@ -155,12 +159,14 @@ func handlePublish(c client.Client, cmd *msg.Command) error {
 		Name: "onStatus",
 		TransactionId: 0,
 		Object: nil,
-		UserArguments: map[string]interface{} {
-			"level": "status",
-			"code": "NetStream.Publish.Start",
-			"description": "123 is now published.",
-			"details": "123",
-			"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+		UserArguments: []interface{} {
+			map[string]interface{} {
+				"level": "status",
+				"code": "NetStream.Publish.Start",
+				"description": "123 is now published.",
+				"details": "123",
+				"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+			},
 		},
 	}
 	_, err := c.Write(onStatus.Encode())
