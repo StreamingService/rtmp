@@ -149,6 +149,20 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 
 func handlePublish(c client.Client, cmd *msg.Command) error {
 	log.Print("处理publish命令")
+
+	// c.UserArguments[0] : publish name
+	// c.UserArguments[1] : publish type, live、record、append
+	if (cmd.UserArguments == nil || len(cmd.UserArguments) < 2) {
+		log.Print("publish user argument length < 2")
+		return nil
+	}
+
+	publishName, isStr := cmd.UserArguments[0].(string)
+	if (!isStr) {
+		log.Printf("name数据不是string类型")
+		return nil
+	}
+
 	// 触发onStatus事件
 	onStatus := msg.Command {
 		Header: msg.Header {
@@ -157,18 +171,32 @@ func handlePublish(c client.Client, cmd *msg.Command) error {
 			StreamId: cmd.Header.StreamId,
 		},
 		Name: "onStatus",
-		TransactionId: 0,
+		TransactionId: cmd.TransactionId,
 		Object: nil,
 		UserArguments: []interface{} {
 			map[string]interface{} {
 				"level": "status",
 				"code": "NetStream.Publish.Start",
-				"description": "123 is now published.",
-				"details": "123",
+				"description": publishName + " is now published.",
+				"details": publishName,
 				"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
 			},
 		},
 	}
 	_, err := c.Write(onStatus.Encode())
+
+	// // test
+	// result := msg.Command {
+	// 	Header: msg.Header {
+	// 		Format: 0,
+	// 		ChunkStreamId: cmd.Header.ChunkStreamId,
+	// 		StreamId: cmd.Header.StreamId,
+	// 	},
+	// 	Name: "_result",
+	// 	TransactionId: cmd.TransactionId,
+	// 	Object: nil,
+	// }
+	// c.Write(result.Encode())
+
 	return err
 }
