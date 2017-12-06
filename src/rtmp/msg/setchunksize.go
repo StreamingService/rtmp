@@ -1,6 +1,7 @@
 package msg
 
 import (
+	"bytes"
 	"io"
 
 	"rtmp/codec"
@@ -22,4 +23,14 @@ func (msg *SetChunkSize) Read(reader io.Reader) error {
 	msg.ChunkSize = codec.DeInt32(b)
 
 	return nil
+}
+
+func (msg *SetChunkSize) Encode() []byte {
+	msg.Header.BodySize = 4
+	msg.Header.TypeId = 0x01
+
+	buf := bytes.NewBuffer([]byte{})
+	msg.Header.Write(buf)
+	buf.Write(codec.EnInt32(msg.ChunkSize))
+	return buf.Bytes()
 }
