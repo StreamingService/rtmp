@@ -42,7 +42,7 @@ func (s *RtmpService) handshake() error {
 
 	// S1
 	s1 := msg.S1 {
-		Time: 10,
+		Time: 0,
 	}
 	err = s.sendMsg(&s1)
 	if (err != nil) {
