@@ -138,7 +138,7 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 		Name: "_result",
 		TransactionId: cmd.TransactionId,
 		UserArguments: []interface{} {
-			float64(10), // stream id
+			float64(1), // stream id
 		},
 	}
 
