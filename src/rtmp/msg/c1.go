@@ -13,6 +13,7 @@ length 1536 bit
 */
 type C1 struct {
 	time uint32
+	Random []byte // 随机数据, 1528 byte
 }
 
 func (msg *C1) decode(bytes []byte) error {
@@ -22,6 +23,7 @@ func (msg *C1) decode(bytes []byte) error {
 	
 	// 目前只解析时间字段
 	msg.time = codec.DeInt32(bytes)
+	msg.Random = bytes[8:]
 	return nil
 }
 

@@ -61,6 +61,7 @@ func (s *RtmpService) handshake() error {
 	s2 := msg.S2 {
 		TimeInC1: c1.GetTime(),
 		TimeSendbyS1: s1.Time,
+		RandomInC1: c1.Random,
 	}
 	s.sendMsg(&s2)
 

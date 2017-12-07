@@ -2,7 +2,6 @@ package msg
 
 import (
 	"bytes"
-	"math/rand"
 
 	"rtmp/codec"
 )
@@ -10,6 +9,7 @@ import (
 type S2 struct {
 	TimeInC1 uint32 // 32bit
 	TimeSendbyS1 uint32 // 32bit
+	RandomInC1 []byte // c1中的随机数据, 1528 byte
 }
 
 func (msg *S2) Encode() []byte {
@@ -17,10 +17,8 @@ func (msg *S2) Encode() []byte {
 	buf.Write(codec.EnInt32(msg.TimeInC1)) // 32 bit time
 	buf.Write(codec.EnInt32(msg.TimeSendbyS1)) // 32 bit time2
 
-	// 1528 bit rondom data
-	for i:=0; i < 1528 ; i++  {
-		buf.WriteByte(byte(rand.Uint32()))
-	}
+	// 1528 bit rondom data from c1
+	buf.Write(msg.RandomInC1)
 
 	return buf.Bytes()
 }
