@@ -4,8 +4,9 @@ import (
 	"errors"
 	"log"
 	"strconv"
-
+	
 	"client"
+	"rtmp/codec"
 	"rtmp/msg"
 )
 
@@ -52,6 +53,14 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 	}
 
 	log.Printf("客户端连接应用: %s", app)
+
+	// StreamBegin事件
+	streanBegin := msg.UserControl {
+		Header: msg.Header {},
+		EventType: msg.UC_StreamBegin,
+		EventData: codec.EnInt32(1), // stream id, 与后面createStream相同
+	}
+	c.Write(streanBegin.Encode())
 
 	// 给客户端发送_result命令消息
 	resultCmd := msg.Command {
