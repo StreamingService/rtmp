@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"bytes"
 	"errors"
 	"log"
 	"strconv"
 	
 	"client"
-	"rtmp/codec"
+	// "rtmp/codec"
 	"rtmp/msg"
 )
 
@@ -54,14 +55,8 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 
 	log.Printf("客户端连接应用: %s", app)
 
-	// StreamBegin事件
-	streanBegin := msg.UserControl {
-		Header: msg.Header {},
-		EventType: msg.UC_StreamBegin,
-		EventData: codec.EnInt32(1), // stream id, 与后面createStream相同
-	}
-	c.Write(streanBegin.Encode())
-
+	// TODO 处理connect不正确
+	
 	// 给客户端发送_result命令消息
 	resultCmd := msg.Command {
 		Header: msg.Header {
@@ -70,9 +65,40 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 		},
 		Name: "_result",
 		TransactionId: cmd.TransactionId,
+		UserArguments: []interface{} {
+			map[string]interface{} {
+				"level": "status",
+				"code": "NetConnection.Connect.Success",
+				"description": "Connection succeeded",
+				"objectEncoding": float64(0),
+			},
+		},
 	}
-	_, err := c.Write(resultCmd.Encode())
+	buf := bytes.NewBuffer(resultCmd.Encode())
+
+	// onBWDone
+	onBWDone := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "onBWDone",
+		TransactionId: 0,
+	}
+	buf.Write(onBWDone.Encode())
+
+	_, err := c.Write(buf.Bytes())
 	return err
+
+	// // StreamBegin事件
+	// streanBegin := msg.UserControl {
+	// 	Header: msg.Header {},
+	// 	EventType: msg.UC_StreamBegin,
+	// 	EventData: codec.EnInt32(1), // stream id, 与后面createStream相同
+	// }
+	// c.Write(streanBegin.Encode())
+
+	
 }
 
 /*
@@ -81,6 +107,28 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 func handle_checkbw(c client.Client, cmd *msg.Command) error {
 	log.Print("开始处理_checkbw命令")
 
+
+	// 触发onFCPublish事件
+	onFCPublish := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "onFCPublish",
+		TransactionId: 0,
+		Object: nil,
+		UserArguments: []interface{} {
+			map[string]interface{} {
+				"code": "NetStream.Publish.Start",
+				"description": "description2",
+				"details": "details2",
+				"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
+			},
+		},
+	}
+	c.Write(onFCPublish.Encode())
+
+	// result
 	_result := msg.Command {
 		Header: msg.Header {
 			Format: 1,
