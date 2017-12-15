@@ -14,15 +14,15 @@ import (
 /*
 序列化
 
-Number	0×00	double类型
-Boolean	0×01	bool类型
-String	0×02	string类型
-Object	0×03	object类型
+Number	0×00	double类型	float64
+Boolean	0×01	bool类型		bool
+String	0×02	string类型	string
+Object	0×03	object类型	map[string]interface{}
 MovieClip	0×04	Not available in Remoting
-Null	0×05	null类型，空
+Null	0×05	null类型，空	nil
 Undefined	0×06	
 Reference	0×07	
-MixedArray	0×08	
+MixedArray	0×08				[]map[string]interface{}
 EndOfObject	0×09	See Object ，表示object结束
 Array	0x0a	
 Date	0x0b	
@@ -60,7 +60,7 @@ func Serialize(data interface{}) []byte {
 		return SerializeObject(obj)
 	}
 
-	arr, isArr := data.([]interface{})
+	arr, isArr := data.([]map[string]interface{})
 	if (isArr) {
 		return SerializeArray(arr)
 	}
@@ -92,6 +92,8 @@ func Deserialize(r io.Reader) (interface{}, error) {
 		return deserializeObject(r)
 	case 0x05: // Null
 		return nil, nil
+	case 0x08:
+		return deserializeArray(r)
 	}
 
 	// 其它类型不支持
@@ -212,7 +214,8 @@ func SerializeObject(obj map[string]interface{}) []byte {
 	}
 
 	buf := bytes.NewBuffer([]byte{ 0x03 }) // 对象类型头
-	buf.Write(serializeObjectKeyValue(obj))
+	keyValBytes, _ := serializeObjectKeyValue(obj)
+	buf.Write(keyValBytes)
 	buf.Write([]byte{ 0x00, 0x00, 0x09 }) // 对象结束
 
 	return buf.Bytes()
@@ -220,10 +223,13 @@ func SerializeObject(obj map[string]interface{}) []byte {
 
 /*
 序列化obj, 不包括类型和结尾
+返回 编码数据和项目数
 */
-func serializeObjectKeyValue(obj map[string]interface{}) []byte {
+func serializeObjectKeyValue(obj map[string]interface{}) ([]byte, uint32) {
 	buf := bytes.NewBuffer([]byte{ })
+	var itemSize uint32 = 0
 	for k, v := range obj {
+		itemSize++
 		// 序列化属性名
 		strBytes := []byte(k)
 		buf.Write(codec.EnInt16(uint16(len(strBytes))))
@@ -232,7 +238,7 @@ func serializeObjectKeyValue(obj map[string]interface{}) []byte {
 		// 序列化值
 		buf.Write(Serialize(v))
 	}
-	return buf.Bytes()
+	return buf.Bytes(), itemSize
 }
 
 
@@ -243,7 +249,7 @@ func SerializeNull() []byte {
 /*
 序列化数组
 */
-func SerializeArray(arr []interface{}) []byte {
+func SerializeArray(arr []map[string]interface{}) []byte {
 	if (arr == nil) {
 		return SerializeNull()
 	}
@@ -252,16 +258,26 @@ func SerializeArray(arr []interface{}) []byte {
 	var arrLen uint32 = 0
 	objBuf := bytes.NewBuffer([]byte{})
 	for _, v := range arr {
-		obj, isObj := v.(map[string]interface{})
-		if (isObj) {
-			arrLen++
-			// 只序列化数组中的对象
-			objBuf.Write(serializeObjectKeyValue(obj));
-		}
+		// 只序列化数组中的对象
+		keyValBytes, itemSize := serializeObjectKeyValue(v)
+		arrLen += itemSize
+		objBuf.Write(keyValBytes);
 	}
 	buf.Write(codec.EnInt32(arrLen)) // 长度
 	buf.Write(objBuf.Bytes()) // 数据
 	buf.Write([]byte{ 0x00, 0x00, 0x09 }) // 结尾
 
 	return buf.Bytes()
+}
+
+func deserializeArray(r io.Reader) ([]map[string]interface{}, error) {
+	lenBytes := make([]byte, 4)
+	_, err := r.Read(lenBytes)
+	if (err != nil) {
+		return nil, err
+	}
+	log.Printf("读取array数据项length: %d", codec.DeInt32(lenBytes))
+	obj, err := deserializeObject(r) // 解析字段
+
+	return []map[string]interface{}{ obj }, nil
 }
