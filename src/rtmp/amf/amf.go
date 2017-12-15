@@ -60,6 +60,11 @@ func Serialize(data interface{}) []byte {
 		return SerializeObject(obj)
 	}
 
+	arr, isArr := data.([]interface{})
+	if (isArr) {
+		return SerializeArray(arr)
+	}
+
 	log.Printf("!!不支持的amf数据类型: %s, 编码为null", reflect.TypeOf(data).String())
 	return SerializeNull()
 }
@@ -207,6 +212,17 @@ func SerializeObject(obj map[string]interface{}) []byte {
 	}
 
 	buf := bytes.NewBuffer([]byte{ 0x03 }) // 对象类型头
+	buf.Write(serializeObjectKeyValue(obj))
+	buf.Write([]byte{ 0x00, 0x00, 0x09 }) // 对象结束
+
+	return buf.Bytes()
+}
+
+/*
+序列化obj, 不包括类型和结尾
+*/
+func serializeObjectKeyValue(obj map[string]interface{}) []byte {
+	buf := bytes.NewBuffer([]byte{ })
 	for k, v := range obj {
 		// 序列化属性名
 		strBytes := []byte(k)
@@ -216,11 +232,36 @@ func SerializeObject(obj map[string]interface{}) []byte {
 		// 序列化值
 		buf.Write(Serialize(v))
 	}
-	buf.Write([]byte{ 0x00, 0x00, 0x09 }) // 对象结束
-
 	return buf.Bytes()
 }
 
+
 func SerializeNull() []byte {
 	return []byte{ 0x05 }
+}
+
+/*
+序列化数组
+*/
+func SerializeArray(arr []interface{}) []byte {
+	if (arr == nil) {
+		return SerializeNull()
+	}
+
+	buf := bytes.NewBuffer([]byte{ 0x08 })
+	var arrLen uint32 = 0
+	objBuf := bytes.NewBuffer([]byte{})
+	for _, v := range arr {
+		obj, isObj := v.(map[string]interface{})
+		if (isObj) {
+			arrLen++
+			// 只序列化数组中的对象
+			objBuf.Write(serializeObjectKeyValue(obj));
+		}
+	}
+	buf.Write(codec.EnInt32(arrLen)) // 长度
+	buf.Write(objBuf.Bytes()) // 数据
+	buf.Write([]byte{ 0x00, 0x00, 0x09 }) // 结尾
+
+	return buf.Bytes()
 }
