@@ -40,6 +40,11 @@ func ParseClientMsg(reader io.Reader) (ClientMsg, error) {
 		msg = &Command {
 			Header: header,
 		}
+
+	case 0x12, 0x0F: // AMF0 or AMF3 Data
+		msg = &Data {
+			Header: header,
+		}
 	}
 
 	if (msg == nil) {
