@@ -7,7 +7,6 @@ import (
 	"strconv"
 	
 	"client"
-	// "rtmp/codec"
 	"rtmp/msg"
 )
 
@@ -55,50 +54,48 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 
 	log.Printf("客户端连接应用: %s", app)
 
-	// TODO 处理connect不正确
+	// ！！！不知道这段意义,但要加了这些数据, 客户端在发送publish命令后才发继续发送推流数据
+	// 本段数据从fms4.5网络包中抓取
+	unknownBytes := []byte{ 
+		0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x26, 0x25, 0xa0,
+		0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x26, 0x25, 0xa0,
+		0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04,
+		0x00, 
+	}
+
+	buf := bytes.NewBuffer(unknownBytes)
 	
 	// 给客户端发送_result命令消息
 	resultCmd := msg.Command {
 		Header: msg.Header {
-			Format: 1,
+			Format: 0,
 			ChunkStreamId: cmd.Header.ChunkStreamId,
 		},
 		Name: "_result",
 		TransactionId: cmd.TransactionId,
+		Object: map[string]interface{} {
+			"fmsVer": "FMS/4,5,0,297",
+			"capabilities": float64(255),
+			"mode": float64(1),
+		},
 		UserArguments: []interface{} {
 			map[string]interface{} {
 				"level": "status",
 				"code": "NetConnection.Connect.Success",
-				"description": "Connection succeeded",
+				"description": "Connection succeeded.",
 				"objectEncoding": float64(0),
+				"data": []interface{} { // 数组
+					map[string]interface{} { // 数组中只支持obj序列化
+						"version": "4,5,0,297",
+					},
+				},
 			},
 		},
 	}
-	buf := bytes.NewBuffer(resultCmd.Encode())
-
-	// onBWDone
-	onBWDone := msg.Command {
-		Header: msg.Header {
-			Format: 1,
-			ChunkStreamId: cmd.Header.ChunkStreamId,
-		},
-		Name: "onBWDone",
-		TransactionId: 0,
-	}
-	buf.Write(onBWDone.Encode())
+	buf.Write(resultCmd.Encode())
 
 	_, err := c.Write(buf.Bytes())
-	return err
-
-	// // StreamBegin事件
-	// streanBegin := msg.UserControl {
-	// 	Header: msg.Header {},
-	// 	EventType: msg.UC_StreamBegin,
-	// 	EventData: codec.EnInt32(1), // stream id, 与后面createStream相同
-	// }
-	// c.Write(streanBegin.Encode())
-
-	
+	return err	
 }
 
 /*
@@ -146,10 +143,22 @@ func handle_checkbw(c client.Client, cmd *msg.Command) error {
 func handleReleaseStream(c client.Client, cmd *msg.Command) error {
 	log.Print("开始处理releaseStream命令")
 
+
+	// onBWDone
+	onBWDone := msg.Command {
+		Header: msg.Header {
+			Format: 1,
+			ChunkStreamId: cmd.Header.ChunkStreamId,
+		},
+		Name: "onBWDone",
+		TransactionId: 0,
+	}
+	c.Write(onBWDone.Encode())
+
 	// 给客户端发送_result命令消息
 	respCmd := msg.Command {
 		Header: msg.Header {
-			Format: 1,
+			Format: 0,
 			ChunkStreamId: cmd.Header.ChunkStreamId,
 		},
 		Name: "_result",
@@ -189,7 +198,7 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 	log.Print("处理createStream命令")
 	_result := msg.Command {
 		Header: msg.Header {
-			Format: 1,
+			Format: 0,
 			ChunkStreamId: cmd.Header.ChunkStreamId,
 		},
 		Name: "_result",
@@ -198,7 +207,6 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 			float64(1), // stream id
 		},
 	}
-
 	_, err := c.Write(_result.Encode())
 
 	return err
@@ -241,19 +249,5 @@ func handlePublish(c client.Client, cmd *msg.Command) error {
 		},
 	}
 	_, err := c.Write(onStatus.Encode())
-
-	// // test
-	// result := msg.Command {
-	// 	Header: msg.Header {
-	// 		Format: 0,
-	// 		ChunkStreamId: cmd.Header.ChunkStreamId,
-	// 		StreamId: cmd.Header.StreamId,
-	// 	},
-	// 	Name: "_result",
-	// 	TransactionId: cmd.TransactionId,
-	// 	Object: nil,
-	// }
-	// c.Write(result.Encode())
-
 	return err
 }
