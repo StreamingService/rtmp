@@ -104,27 +104,6 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 func handle_checkbw(c client.Client, cmd *msg.Command) error {
 	log.Print("开始处理_checkbw命令")
 
-
-	// 触发onFCPublish事件
-	onFCPublish := msg.Command {
-		Header: msg.Header {
-			Format: 1,
-			ChunkStreamId: cmd.Header.ChunkStreamId,
-		},
-		Name: "onFCPublish",
-		TransactionId: 0,
-		Object: nil,
-		UserArguments: []interface{} {
-			map[string]interface{} {
-				"code": "NetStream.Publish.Start",
-				"description": "description2",
-				"details": "details2",
-				"clientid": strconv.FormatInt(int64(c.GetIndex()), 10),
-			},
-		},
-	}
-	c.Write(onFCPublish.Encode())
-
 	// result
 	_result := msg.Command {
 		Header: msg.Header {
