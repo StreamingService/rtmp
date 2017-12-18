@@ -45,6 +45,16 @@ func ParseClientMsg(reader io.Reader) (ClientMsg, error) {
 		msg = &Data {
 			Header: header,
 		}
+
+	case 0x08:
+		msg = &Audio {
+			Header: header,
+		}
+
+	case 0x09:
+		msg = &Video {
+			Header: header,
+		}
 	}
 
 	if (msg == nil) {
