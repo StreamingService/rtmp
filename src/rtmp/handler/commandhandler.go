@@ -54,7 +54,7 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 
 	log.Printf("客户端连接应用: %s", app)
 
-	// ！！！不知道这段意义,但要加了这些数据, 客户端在发送publish命令后才发继续发送推流数据
+	// ！！！不知道这段意义,但要加了这些数据, 客户端在发送publish命令后才会继续发送推流数据
 	// 本段数据从fms4.5网络包中抓取
 	unknownBytes := []byte{ 
 		0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x26, 0x25, 0xa0,
