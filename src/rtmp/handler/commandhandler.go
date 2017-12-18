@@ -27,7 +27,7 @@ func (h *CommandHandler) Handle(se session.Session, c client.Client, m msg.Clien
 
 	switch cmd.Name {
 	case "connect":
-		return handleConnect(c, cmd)
+		return handleConnect(se, c, cmd)
 	case "_checkbw":
 		return handle_checkbw(c, cmd)
 	case "releaseStream":
@@ -37,7 +37,7 @@ func (h *CommandHandler) Handle(se session.Session, c client.Client, m msg.Clien
 	case "createStream":
 		return handleCreateStream(c, cmd)
 	case "publish":
-		return handlePublish(c, cmd)
+		return handlePublish(se, c, cmd)
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func (h *CommandHandler) Handle(se session.Session, c client.Client, m msg.Clien
 /*
 处理连接命令
 */
-func handleConnect(c client.Client, cmd *msg.Command) error {
+func handleConnect(se session.Session, c client.Client, cmd *msg.Command) error {
 	log.Print("开始处理connect命令")
 	app , isStr := cmd.Object["app"].(string)
 	if (!isStr) {
@@ -54,6 +54,9 @@ func handleConnect(c client.Client, cmd *msg.Command) error {
 	}
 
 	log.Printf("客户端连接应用: %s", app)
+
+	// 保存数据到session
+	se.SetAttr("msg.connect.app", app)
 
 	// ！！！不知道这段意义,但要加了这些数据, 客户端在发送publish命令后才会继续发送推流数据
 	// 本段数据从fms4.5网络包中抓取
@@ -192,7 +195,7 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 	return err
 }
 
-func handlePublish(c client.Client, cmd *msg.Command) error {
+func handlePublish(se session.Session, c client.Client, cmd *msg.Command) error {
 	log.Print("处理publish命令")
 
 	// c.UserArguments[0] : publish name
@@ -207,6 +210,8 @@ func handlePublish(c client.Client, cmd *msg.Command) error {
 		log.Printf("name数据不是string类型")
 		return nil
 	}
+
+	// TODO 创建流
 
 	// 触发onStatus事件
 	onStatus := msg.Command {
