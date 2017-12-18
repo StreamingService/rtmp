@@ -2,10 +2,11 @@ package service
 
 import (
 	"log"
-
+	
 	"client"
 	"rtmp/msg"
 	"rtmp/handler"
+	"rtmp/session"
 )
 
 const (
@@ -43,10 +44,13 @@ func (s *RtmpService) DoService() {
 	}
 
 	s.status = HandshakeDone // 状态置为已握手
+
+	// 初始化会话对象
+	sess := session.NewSession()
 	
 	// 服务循环
 	for {
-		msg, err := msg.ParseClientMsg(&s.client)
+		msg, err := msg.ParseClientMsg(&s.client, sess)
 		if (err != nil) {
 			log.Print(err)
 			break
