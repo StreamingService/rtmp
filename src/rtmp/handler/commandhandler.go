@@ -8,6 +8,7 @@ import (
 	
 	"client"
 	"rtmp/msg"
+	"rtmp/session"
 )
 
 /*
@@ -17,7 +18,7 @@ type CommandHandler struct {
 
 }
 
-func (h *CommandHandler) Handle(c client.Client, m msg.ClientMsg) error {
+func (h *CommandHandler) Handle(se session.Session, c client.Client, m msg.ClientMsg) error {
 	log.Print("处理Command消息")
 	cmd, ok := m.(*msg.Command) // 消息类型转换
 	if (!ok) {

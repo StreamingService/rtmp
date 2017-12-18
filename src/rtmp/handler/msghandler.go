@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"rtmp/session"
 	"log"
 	"reflect"
 
@@ -14,7 +15,7 @@ import (
 type MsgHandler interface {
 
 	/* 处理消息 */
-	Handle(c client.Client, m msg.ClientMsg) error
+	Handle(se session.Session, c client.Client, m msg.ClientMsg) error
 }
 
 var handlerMap map[string]MsgHandler = make(map[string]MsgHandler)
