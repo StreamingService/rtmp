@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"rtmp/streaming"
 	"bytes"
 	"errors"
 	"log"
@@ -18,7 +19,7 @@ type CommandHandler struct {
 
 }
 
-func (h *CommandHandler) Handle(se session.Session, c client.Client, m msg.ClientMsg) error {
+func (h *CommandHandler) Handle(se *session.Session, c client.Client, m msg.ClientMsg) error {
 	log.Print("处理Command消息")
 	cmd, ok := m.(*msg.Command) // 消息类型转换
 	if (!ok) {
@@ -46,7 +47,7 @@ func (h *CommandHandler) Handle(se session.Session, c client.Client, m msg.Clien
 /*
 处理连接命令
 */
-func handleConnect(se session.Session, c client.Client, cmd *msg.Command) error {
+func handleConnect(se *session.Session, c client.Client, cmd *msg.Command) error {
 	log.Print("开始处理connect命令")
 	app , isStr := cmd.Object["app"].(string)
 	if (!isStr) {
@@ -195,7 +196,7 @@ func handleCreateStream(c client.Client, cmd *msg.Command) error {
 	return err
 }
 
-func handlePublish(se session.Session, c client.Client, cmd *msg.Command) error {
+func handlePublish(se *session.Session, c client.Client, cmd *msg.Command) error {
 	log.Print("处理publish命令")
 
 	// c.UserArguments[0] : publish name
@@ -211,7 +212,12 @@ func handlePublish(se session.Session, c client.Client, cmd *msg.Command) error 
 		return nil
 	}
 
-	// TODO 创建流
+	// 创建流
+	stream, err := streaming.NewFileStreaming("E:\\tmp\\rtmp\\streaming\\" + publishName)
+	if (err != nil) {
+		return err
+	}
+	se.SetAttr("msg.streaming", stream) // 放入会话
 
 	// 触发onStatus事件
 	onStatus := msg.Command {
@@ -233,6 +239,6 @@ func handlePublish(se session.Session, c client.Client, cmd *msg.Command) error 
 			},
 		},
 	}
-	_, err := c.Write(onStatus.Encode())
+	_, err = c.Write(onStatus.Encode())
 	return err
 }

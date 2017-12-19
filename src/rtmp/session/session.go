@@ -8,8 +8,8 @@ type Session struct {
 	data map[string]interface{}
 }
 
-func NewSession() Session {
-	return Session {
+func NewSession() *Session {
+	return &Session {
 		data: map[string]interface{} {
 			"MaxChunkSize": uint32(128),
 		},

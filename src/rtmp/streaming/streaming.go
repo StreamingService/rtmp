@@ -3,5 +3,5 @@ package streaming
 type Streaming interface {
 	Close()
 
-	Write(byteArray []byte) error
+	Write(byteArray []byte) (int, error)
 }

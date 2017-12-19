@@ -10,12 +10,12 @@ type AudioHandler struct {
 
 }
 
-func (h *AudioHandler) Handle(se session.Session, c client.Client, m msg.ClientMsg) error {
-	video, isVideo := m.(*msg.Video)
-	if (!isVideo) {
+func (h *AudioHandler) Handle(se *session.Session, c client.Client, m msg.ClientMsg) error {
+	audio, isAudio := m.(*msg.Audio)
+	if (!isAudio) {
 		return nil
 	}
 
-	// 写video数据到流
-	return write2streaming(se, video.Data)
+	// 写audio数据到流
+	return write2streaming(se, audio.Data)
 }

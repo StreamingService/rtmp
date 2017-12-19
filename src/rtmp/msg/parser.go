@@ -11,7 +11,7 @@ import (
 /*
 从流 解析客户端消息, 不包括handshake消息
 */
-func ParseClientMsg(reader io.Reader, session session.Session) (ClientMsg, error) {
+func ParseClientMsg(reader io.Reader, session *session.Session) (ClientMsg, error) {
 	// 先解析header
 	header := Header {}
 	err := header.Read(reader)
@@ -77,7 +77,7 @@ func ParseClientMsg(reader io.Reader, session session.Session) (ClientMsg, error
 /*
 处理header
 */
-func processHeader(header *Header, se session.Session) error {
+func processHeader(header *Header, se *session.Session) error {
 	if (header.Format == 0) {
 		setFormat0Header(se, header.ChunkStreamId, header)
 		// 重新设置format为0的header到session
@@ -109,7 +109,7 @@ const format0headerMapSessionKey = "msg.format0headerMap"
 /*
 从session中获取format为0的header
 */
-func getFormat0Header(se session.Session, chunkStreamId uint32) *Header {
+func getFormat0Header(se *session.Session, chunkStreamId uint32) *Header {
 	headerMap := se.GetAttr(format0headerMapSessionKey)
 	if (headerMap == nil) {
 		return nil
@@ -127,7 +127,7 @@ func getFormat0Header(se session.Session, chunkStreamId uint32) *Header {
 /*
 设置format为0的header到session
 */
-func setFormat0Header(se session.Session, chunkStreamId uint32, header *Header) {
+func setFormat0Header(se *session.Session, chunkStreamId uint32, header *Header) {
 	var headerMap2 map[uint32]*Header
 	headerMap := se.GetAttr(format0headerMapSessionKey)
 	if (headerMap == nil) {

@@ -10,7 +10,7 @@ import (
 /*
 写数据到流
 */
-func write2streaming(se session.Session, data []byte) error {
+func write2streaming(se *session.Session, data []byte) error {
 	st := se.GetAttr("msg.streaming")
 	if (st == nil) {
 		return errors.New("session中无streaming实例")
@@ -21,5 +21,6 @@ func write2streaming(se session.Session, data []byte) error {
 		return errors.New("session中streaming类型不正确")
 	}
 
-	return st2.Write(data)
+	_, err := st2.Write(data)
+	return err
 }

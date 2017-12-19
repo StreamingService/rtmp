@@ -15,7 +15,7 @@ import (
 type MsgHandler interface {
 
 	/* 处理消息 */
-	Handle(se session.Session, c client.Client, m msg.ClientMsg) error
+	Handle(se *session.Session, c client.Client, m msg.ClientMsg) error
 }
 
 var handlerMap map[string]MsgHandler = make(map[string]MsgHandler)
@@ -34,6 +34,8 @@ func GetMsgHandler(m msg.ClientMsg) MsgHandler {
 func RegistHandlers() {
 	registHandler("*msg.SetChunkSize", &SetChunkSizeHandler{})
 	registHandler("*msg.Command", &CommandHandler{})
+	registHandler("*msg.Audio", &AudioHandler{})
+	registHandler("*msg.Video", &VideoHandler{})
 }
 
 func registHandler(msgType string, handler MsgHandler) {
