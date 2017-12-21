@@ -17,9 +17,17 @@ type Video struct {
 
 // begin 视频格式常量
 const VF_H264 uint8 = 7 // h264 format
+const VF_H263 uint8 = 2 // seronson h.263
+const VF_ScreenVideo uint8 = 3 // screen video
+const VF_On2VP6 uint8 = 4 // On2 VP6
+const VF_On2VP6A uint8 = 5 // On2 VP6 with alpha channel
+const VF_ScreenVideo2 uint8 = 6 // screen video version 2
 
 // begin 视频类型常量
 const VT_Keyframe uint8 = 1 // keyframe
+const VT_Innerframe uint8 = 2 // inner frame
+const VT_DisposableInnerframe uint8 = 3 // disposable inner frame （h.263 only）
+const VT_GeneratedKeyframe uint8 = 4 // generated keyframe
 
 func (msg *Video) Read(reader io.Reader) error {
 	control := []byte{ 0 }

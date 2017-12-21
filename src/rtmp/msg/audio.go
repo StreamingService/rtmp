@@ -19,7 +19,21 @@ type Audio struct {
 
 // begin 音频类型常量
 const AF_HEACC uint8 = 10 // he-acc
+const AF_UnComp uint8 = 0 // 未压缩
+const AF_ADPCM uint8 = 1
+const AF_MP3 uint8 = 2
+const AF_Nellymoser16 uint8 = 4 // Nellymoser 16-kHz mono
+const AF_Nellymoser8 uint8 = 5 // Nellymoser 8-kHz mono
 
+// begin SampleRate 常量
+const ASR_5_5 uint8 = 0 // 5.5KHz
+const ASR_11 uint8 = 1
+const ASR_22 uint8 = 2
+const ASR_44 uint8 = 3
+
+// begin SampleSize 常量
+const ASS_8bit uint8 = 0 // snd8Bit
+const ASS_16bit uint8 = 1 // snd16Bit
 
 func (msg *Audio) Read(reader io.Reader) error {
 	control := []byte{ 0 }
